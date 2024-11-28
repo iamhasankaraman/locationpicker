@@ -28,7 +28,7 @@ class PlacePicker extends StatefulWidget {
   /// map does not pan to the user's current location.
   final LatLng? displayLocation;
   LocalizationItem? localizationItem;
-  LatLng defaultLocation = LatLng(10.5381264, 73.8827201);
+  LatLng defaultLocation = LatLng(24.753832, 46.6925579);
 
   PlacePicker(this.apiKey,
       {this.displayLocation, this.localizationItem, LatLng? defaultLocation}) {
@@ -90,9 +90,14 @@ class PlacePickerState extends State<PlacePicker> {
     super.initState();
     if (widget.displayLocation == null) {
       _getCurrentLocation().then((value) {
-        setState(() {
-          _currentLocation = value;
-        });
+        if (value != null) {
+          setState(() {
+            _currentLocation = value;
+          });
+        } else {
+          //Navigator.of(context).pop(null);
+          print("getting current location null");
+        }
         setState(() {
           _loadMap = true;
         });
@@ -132,7 +137,7 @@ class PlacePickerState extends State<PlacePicker> {
           locationResult = null;
           _delayedPop();
           return Future.value(false);
-        } else {
+        }  else  {
           return Future.value(true);
         }
       },
@@ -188,8 +193,7 @@ class PlacePickerState extends State<PlacePicker> {
                     Padding(
                       child: Text(widget.localizationItem!.nearBy,
                           style: TextStyle(fontSize: 16)),
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     ),
                     Expanded(
                       child: ListView(
@@ -231,6 +235,10 @@ class PlacePickerState extends State<PlacePicker> {
     }
 
     previousSearchTerm = place;
+
+    if (context == null) {
+      return;
+    }
 
     clearOverlay();
 
@@ -506,6 +514,9 @@ class PlacePickerState extends State<PlacePicker> {
             var tmp = result['address_components'][i];
             var types = tmp["types"] as List<dynamic>;
             var shortName = tmp['short_name'];
+            if (types == null) {
+              continue;
+            }
             if (i == 0) {
               // [street_number]
               name = shortName;
@@ -634,7 +645,7 @@ class PlacePickerState extends State<PlacePicker> {
       //moveToLocation(target);
       print('target:$target');
       return target;
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
       final locationData = await Geolocator.getLastKnownPosition();
       if (locationData != null) {
         return LatLng(locationData.latitude, locationData.longitude);
